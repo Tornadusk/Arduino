@@ -1,0 +1,323 @@
+#include <SoftwareSerial.h>
+#include <Servo.h>
+#include <SPI.h>
+#include <MFRC522.h>
+
+// ---------- CONFIG ----------
+SoftwareSerial BT(2, 3);
+Servo servo;
+const int SERVO_PIN = 5;
+
+const int trigPin = 4;
+const int echoPin = 6;
+
+// RFID RC522
+#define RST_PIN 8
+#define SS_PIN 7
+MFRC522 mfrc522(SS_PIN, RST_PIN);
+
+// UIDs permitidos
+const unsigned long uidAbrir = 2747323383;
+const unsigned long uidCerrar = 2205297957;
+
+// Rango válido
+const int distanciaMin = 5;
+const int distanciaMax = 100;
+
+// Estado
+int estadoServo = 0;
+bool servoAdjunto = false;
+unsigned long ultimaPresenciaOK = 0;
+int ultimaDistancia = -1;
+
+// Buffer simple
+char entrada[16];
+byte entradaLen = 0;
+
+// Modo (1=rfid, 2=sensor)
+byte modo = 1;
+
+// Timing
+unsigned long ultimoAviso = 0;
+unsigned long ultimoRFID = 0;
+
+// ---------- UTIL PRINT ----------
+void btPrint(const char* s) { 
+  BT.print(s); 
+  Serial.print(s); 
+}
+
+void btPrintln(const char* s) { 
+  BT.println(s); 
+  Serial.println(s); 
+}
+
+// ---------- STRING UTILS ----------
+bool equalsIgnoreCase(const char* a, const char* b) {
+  while (*a && *b) {
+    char ca = *a;
+    char cb = *b;
+    if (ca >= 'A' && ca <= 'Z') ca += 32; // to lower
+    if (cb >= 'A' && cb <= 'Z') cb += 32; // to lower
+    if (ca != cb) return false;
+    ++a; ++b;
+  }
+  return (*a == '\0' && *b == '\0');
+}
+
+// ---------- SETUP ----------
+void setup() {
+  BT.begin(9600);
+  Serial.begin(9600);
+
+  servo.attach(SERVO_PIN);
+  servo.write(0);
+  delay(400);
+  servo.detach();
+  servoAdjunto = false;
+  estadoServo = 0;
+
+  pinMode(trigPin, OUTPUT);
+  pinMode(echoPin, INPUT);
+
+  SPI.begin();
+  mfrc522.PCD_Init();
+
+  mostrarMenu();
+}
+
+void mostrarModo() {
+  btPrint("Modo: ");
+  if (modo == 1) btPrintln("RFID (Tarjetas + BT)");
+  else btPrintln("SENSOR (Ultrasonico + BT)");
+}
+
+void mostrarMenu() {
+  btPrintln("\r\n=== Control BT + RFID + Ultrasonico ===");
+  btPrintln("Comandos:");
+  btPrintln("  modo1       -> RFID (tarjetas)");
+  btPrintln("  modo2       -> SENSOR (ultrasonico)");
+  btPrintln("  Abrir/A/1   -> Abrir (solo modo sensor)");
+  btPrintln("  Cerrar/C/2  -> Cerrar (solo modo sensor)");
+  btPrintln("  M1          -> Abrir (solo modo sensor)");
+  btPrintln("  M2          -> Cerrar (solo modo sensor)");
+  mostrarModo();
+  btPrint("\r\n> ");
+}
+
+void cambiarModo(byte nuevoModo) {
+  if (nuevoModo == 1) {
+    // Reactivar RFID
+    pinMode(RST_PIN, OUTPUT);
+    pinMode(SS_PIN, OUTPUT);
+    SPI.begin();
+    mfrc522.PCD_Init();
+    btPrintln("RFID reactivado");
+  } else {
+    // Desactivar RFID
+    SPI.end();
+    pinMode(RST_PIN, INPUT);
+    pinMode(SS_PIN, INPUT);
+    btPrintln("RFID desactivado");
+  }
+  
+  modo = nuevoModo;
+  mostrarModo();
+}
+
+// ---------- LOOP ----------
+void loop() {
+  // Sin auto-retorno automático - solo cambia con comandos
+
+  // 1) Sensor (solo en modo 2)
+  if (modo == 2) {
+    // Deshabilitar RFID completamente en modo sensor
+    SPI.end();
+    // Desconectar pines RFID físicamente
+    pinMode(RST_PIN, INPUT);
+    pinMode(SS_PIN, INPUT);
+    
+    bool presencia = medirPresencia();
+    if (presencia) ultimaPresenciaOK = millis();
+
+    // Avisos cada 1000ms
+    if (millis() - ultimoAviso >= 1000) {
+      if (presencia) {
+        btPrint("Detectado a ");
+        btPrint(String(ultimaDistancia).c_str());
+        btPrintln(" cm");
+      } else {
+        btPrintln("Nada detectado o fuera de rango");
+      }
+      ultimoAviso = millis();
+    }
+  }
+
+  // 2) Lectura BT
+  while (BT.available()) {
+    char c = BT.read();
+    
+    if (c == '\n' || c == '\r') {
+      entrada[entradaLen] = '\0';
+      if (entradaLen > 0) {
+        procesarComando();
+      }
+      entradaLen = 0;
+      btPrint("\r\n> ");
+    } else if (entradaLen < 15) {
+      entrada[entradaLen++] = c;
+    }
+  }
+
+  // 3) RFID (solo en modo 1)
+  if (modo == 1 && (millis() - ultimoRFID >= 300)) {
+    if (mfrc522.PICC_IsNewCardPresent()) {
+      if (mfrc522.PICC_ReadCardSerial()) {
+        unsigned long uid = 0;
+        for (byte i = 0; i < 4; i++) {
+          uid = (uid << 8) | mfrc522.uid.uidByte[i];
+        }
+        
+        btPrint("\r\nRFID: ");
+        btPrintln(String(uid).c_str());
+        
+        if (uid == uidAbrir || uid == uidCerrar) {
+          toggleServo();
+        } else {
+          btPrintln("Tarjeta no autorizada");
+        }
+        
+        mfrc522.PICC_HaltA();
+        mfrc522.PCD_StopCrypto1();
+      }
+    }
+    ultimoRFID = millis();
+  }
+
+  delay(10);
+}
+
+// ---------- COMANDOS ----------
+void procesarComando() {
+  // Comandos de modo
+  if (strcmp(entrada, "modo1") == 0) {
+    cambiarModo(1);
+    return;
+  }
+  if (strcmp(entrada, "modo2") == 0) {
+    cambiarModo(2);
+    return;
+  }
+
+  // Mostrar menú
+  if (strcmp(entrada, "menu") == 0 || strcmp(entrada, "help") == 0 || strcmp(entrada, "?") == 0) {
+    mostrarMenu();
+    return;
+  }
+
+  // Validar presencia (solo en modo sensor)
+  if (modo == 2) {
+    bool ahora = medirPresencia();
+    bool ventana = (millis() - ultimaPresenciaOK) <= 2000;
+    
+    if (!(ahora || ventana)) {
+      btPrintln("ERROR: Sin objeto en rango");
+      return;
+    }
+  }
+
+  // Comandos solo funcionan en modo sensor
+  if (modo == 2) {
+    // Comandos de control
+    if (equalsIgnoreCase(entrada, "Abrir") || strcmp(entrada, "A") == 0 || 
+        strcmp(entrada, "1") == 0) {
+      btPrintln("OK: ABRIR");
+      moverServo(90);
+      return;
+    }
+    
+    if (equalsIgnoreCase(entrada, "Cerrar") || strcmp(entrada, "C") == 0 || 
+        strcmp(entrada, "2") == 0) {
+      btPrintln("OK: CERRAR");
+      moverServo(0);
+      return;
+    }
+
+    // Comandos M1 y M2 (solo en modo sensor con presencia)
+    if (strcmp(entrada, "M1") == 0) {
+      btPrintln("OK: M1 ABRIR");
+      moverServo(90);
+      return;
+    }
+    if (strcmp(entrada, "M2") == 0) {
+      btPrintln("OK: M2 CERRAR");
+      moverServo(0);
+      return;
+    }
+  } else {
+    // En modo RFID, solo comandos de modo son válidos
+    btPrintln("ERROR: En modo RFID solo usar tarjetas o comandos: modo1, modo2");
+  }
+
+  btPrintln("Comando invalido");
+}
+
+// ---------- SERVO ----------
+void moverServo(int angulo) {
+  if (estadoServo == angulo) return;
+  
+  servo.attach(SERVO_PIN);
+  servo.write(angulo);
+  delay(400);
+  servo.detach();
+  
+  estadoServo = angulo;
+}
+
+void toggleServo() {
+  if (estadoServo == 0) {
+    btPrintln("OK: RFID ABRIR");
+    moverServo(90);
+  } else {
+    btPrintln("OK: RFID CERRAR");
+    moverServo(0);
+  }
+}
+
+// ---------- SENSADO ----------
+bool medirPresencia() {
+  int d1 = medirDistancia();
+  delay(4);
+  int d2 = medirDistancia();
+  int best = (d1 > 0 && d2 > 0) ? (d1 + d2) / 2 : (d1 > 0 ? d1 : d2);
+  ultimaDistancia = best;
+  return enRango(d1) && enRango(d2);
+}
+
+inline bool enRango(int d) {
+  return (d > 0 && d >= distanciaMin && d <= distanciaMax);
+}
+
+int medirDistancia() {
+  long suma = 0;
+  int lecturas = 2;
+  int validas = 0;
+
+  for (int i = 0; i < lecturas; i++) {
+    digitalWrite(trigPin, LOW);
+    delayMicroseconds(2);
+    digitalWrite(trigPin, HIGH);
+    delayMicroseconds(10);
+    digitalWrite(trigPin, LOW);
+
+    // Timeout corto ~ 6 ms (hasta ~100 cm) para no bloquear
+    unsigned long dur = pulseIn(echoPin, HIGH, 6000UL);
+    if (dur > 0) {
+      float cm = (dur * 0.034f) / 2.0f;
+      suma += (long)cm;
+      validas++;
+    }
+  }
+  if (validas == 0) return -1;
+  return (int)(suma / validas);
+}
