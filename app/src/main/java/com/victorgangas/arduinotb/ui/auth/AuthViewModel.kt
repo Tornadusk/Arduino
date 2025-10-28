@@ -34,6 +34,7 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
     
     // Estado de sesión
     val isLoggedIn = userPreferences.isLoggedIn
+    val userId = userPreferences.userId
     val username = userPreferences.username
     val userEmail = userPreferences.userEmail
     
@@ -228,6 +229,53 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
     
+    // Cambiar contraseña del usuario actual
+    fun changePassword(userId: Int, currentPassword: String, newPassword: String, confirmPassword: String) {
+        // Validaciones
+        if (currentPassword.isBlank()) {
+            errorMessage = "La contraseña actual no puede estar vacía"
+            return
+        }
+        
+        if (newPassword.isBlank()) {
+            errorMessage = "La nueva contraseña no puede estar vacía"
+            return
+        }
+        
+        if (newPassword.length < 6) {
+            errorMessage = "La nueva contraseña debe tener al menos 6 caracteres"
+            return
+        }
+        
+        if (newPassword != confirmPassword) {
+            errorMessage = "Las contraseñas no coinciden"
+            return
+        }
+        
+        if (currentPassword == newPassword) {
+            errorMessage = "La nueva contraseña debe ser diferente a la actual"
+            return
+        }
+        
+        isLoading = true
+        errorMessage = null
+        
+        viewModelScope.launch {
+            val result = authRepository.changePassword(userId, currentPassword, newPassword)
+            
+            result.fold(
+                onSuccess = {
+                    _authState.value = AuthState.PasswordChanged
+                    isLoading = false
+                },
+                onFailure = { e ->
+                    errorMessage = e.message
+                    isLoading = false
+                }
+            )
+        }
+    }
+    
     // Limpiar mensaje de error
     fun clearError() {
         errorMessage = null
@@ -250,5 +298,6 @@ sealed class AuthState {
     object Authenticated : AuthState()
     object Unauthenticated : AuthState()
     object PasswordReset : AuthState()
+    object PasswordChanged : AuthState()
 }
 

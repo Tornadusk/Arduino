@@ -13,12 +13,14 @@ import com.victorgangas.arduinotb.ui.auth.RegisterScreen
 import com.victorgangas.arduinotb.ui.auth.ForgotPasswordScreen
 import androidx.compose.ui.Modifier
 import com.victorgangas.arduinotb.BluetoothViewModel
+import com.victorgangas.arduinotb.ui.profile.ProfileScreen
 
 sealed class Screen(val route: String) {
     object Login : Screen("login")
     object Register : Screen("register")
     object ForgotPassword : Screen("forgot_password")
     object Main : Screen("main")
+    object Profile : Screen("profile")
 }
 
 @Composable
@@ -95,6 +97,9 @@ fun NavGraph(
                     navController.navigate(Screen.Login.route) {
                         popUpTo(Screen.Main.route) { inclusive = true }
                     }
+                },
+                onNavigateToProfile = {
+                    navController.navigate(Screen.Profile.route)
                 }
             )
             
@@ -103,6 +108,21 @@ fun NavGraph(
                 navController.navigate(Screen.Login.route) {
                     popUpTo(Screen.Main.route) { inclusive = true }
                 }
+            }
+        }
+        
+        // Pantalla de Perfil
+        composable(Screen.Profile.route) {
+            val userId by authViewModel.userId.collectAsState(initial = null)
+            
+            userId?.let { id ->
+                ProfileScreen(
+                    authViewModel = authViewModel,
+                    userId = id,
+                    onNavigateBack = {
+                        navController.popBackStack()
+                    }
+                )
             }
         }
     }

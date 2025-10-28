@@ -310,7 +310,12 @@ class BluetoothViewModel : ViewModel() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AppScreen(vm: BluetoothViewModel, modifier: Modifier = Modifier, onLogout: () -> Unit = {}) {
+fun AppScreen(
+    vm: BluetoothViewModel, 
+    modifier: Modifier = Modifier, 
+    onLogout: () -> Unit = {}, 
+    onNavigateToProfile: () -> Unit = {}
+) {
     var expanded by remember { mutableStateOf(false) }
     val devices = vm.pairedDevices
     val selected = vm.selectedDevice
@@ -330,6 +335,14 @@ fun AppScreen(vm: BluetoothViewModel, modifier: Modifier = Modifier, onLogout: (
                         Icon(Icons.Filled.MoreVert, contentDescription = "Configuración")
                     }
                     DropdownMenu(expanded = menuExpanded, onDismissRequest = { menuExpanded = false }) {
+                        DropdownMenuItem(
+                            text = { Text("Mi Perfil") },
+                            onClick = { 
+                                menuExpanded = false
+                                onNavigateToProfile()
+                            }
+                        )
+                        androidx.compose.material3.Divider()
                         DropdownMenuItem(
                             text = { Text(if (vm.logNewestFirst) "Nuevos arriba ✓" else "Nuevos arriba") },
                             onClick = { 

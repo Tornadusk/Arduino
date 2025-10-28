@@ -119,6 +119,51 @@ class AuthRepository(
         }
     }
     
+    // Obtener información del usuario actual
+    suspend fun getCurrentUser(userId: Int): Result<User> {
+        return try {
+            val user = userDao.getUserById(userId)
+            if (user != null) {
+                Result.success(user)
+            } else {
+                Result.failure(Exception("Usuario no encontrado"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+    
+    // Cambiar contraseña del usuario actual
+    suspend fun changePassword(userId: Int, currentPassword: String, newPassword: String): Result<Boolean> {
+        return try {
+            val user = userDao.getUserById(userId)
+            
+            if (user == null) {
+                return Result.failure(Exception("Usuario no encontrado"))
+            }
+            
+            // Verificar que la contraseña actual sea correcta
+            val hashedCurrentPassword = hashPassword(currentPassword)
+            if (user.password != hashedCurrentPassword) {
+                return Result.failure(Exception("La contraseña actual es incorrecta"))
+            }
+            
+            // Verificar que la nueva contraseña sea diferente
+            val hashedNewPassword = hashPassword(newPassword)
+            if (hashedCurrentPassword == hashedNewPassword) {
+                return Result.failure(Exception("La nueva contraseña debe ser diferente a la actual"))
+            }
+            
+            // Actualizar la contraseña
+            val updatedUser = user.copy(password = hashedNewPassword)
+            userDao.updateUser(updatedUser)
+            
+            Result.success(true)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+    
     // Hashear contraseña con SHA-256
     private fun hashPassword(password: String): String {
         val bytes = password.toByteArray()
