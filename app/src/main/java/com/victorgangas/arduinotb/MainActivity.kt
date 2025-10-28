@@ -81,7 +81,8 @@ import androidx.compose.ui.text.buildAnnotatedString
 
 @OptIn(ExperimentalMaterial3Api::class)
 class MainActivity : ComponentActivity() {
-    private val vm: BluetoothViewModel by viewModels()
+    private val bluetoothVm: BluetoothViewModel by viewModels()
+    private val authVm: com.victorgangas.arduinotb.ui.auth.AuthViewModel by viewModels()
 
     private val permissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
@@ -93,43 +94,13 @@ class MainActivity : ComponentActivity() {
         requestBtPermissions()
         setContent {
             ArduinotbTheme {
-                Scaffold(
-                    modifier = Modifier.fillMaxSize(),
-                    topBar = {
-                        TopAppBar(
-                            title = { Text("Arduino BT Controller") },
-                            colors = TopAppBarDefaults.topAppBarColors(),
-                            actions = {
-                                var expanded by remember { mutableStateOf(false) }
-                                IconButton(onClick = { expanded = !expanded }) {
-                                    Icon(Icons.Filled.MoreVert, contentDescription = "Configuración")
-                                }
-                                DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-                                    DropdownMenuItem(
-                                        text = { Text(if (vm.logNewestFirst) "Nuevos arriba ✓" else "Nuevos arriba") },
-                                        onClick = { 
-                                            if (!vm.logNewestFirst) vm.toggleLogOrder()
-                                            expanded = false 
-                                        }
-                                    )
-                                    DropdownMenuItem(
-                                        text = { Text(if (!vm.logNewestFirst) "Nuevos abajo ✓" else "Nuevos abajo") },
-                                        onClick = { 
-                                            if (vm.logNewestFirst) vm.toggleLogOrder()
-                                            expanded = false 
-                                        }
-                                    )
-                                    DropdownMenuItem(
-                                        text = { Text("Ocultar/Mostrar log") },
-                                        onClick = { vm.toggleLogVisibility(); expanded = false }
-                                    )
-                                }
-                            }
-                        )
-                    }
-                ) { innerPadding ->
-                    AppScreen(vm, Modifier.padding(innerPadding))
-                }
+                val navController = androidx.navigation.compose.rememberNavController()
+                
+                com.victorgangas.arduinotb.navigation.NavGraph(
+                    navController = navController,
+                    authViewModel = authVm,
+                    bluetoothViewModel = bluetoothVm
+                )
             }
         }
     }
@@ -339,7 +310,7 @@ class BluetoothViewModel : ViewModel() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AppScreen(vm: BluetoothViewModel, modifier: Modifier = Modifier) {
+fun AppScreen(vm: BluetoothViewModel, modifier: Modifier = Modifier, onLogout: () -> Unit = {}) {
     var expanded by remember { mutableStateOf(false) }
     val devices = vm.pairedDevices
     val selected = vm.selectedDevice
@@ -347,12 +318,56 @@ fun AppScreen(vm: BluetoothViewModel, modifier: Modifier = Modifier) {
     val clip = LocalClipboardManager.current
     val context = LocalContext.current
 
-    // Sección principal: layout vertical con padding
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(16.dp)
-    ) {
+    Scaffold(
+        modifier = Modifier.fillMaxSize(),
+        topBar = {
+            TopAppBar(
+                title = { Text("Arduino BT Controller") },
+                colors = TopAppBarDefaults.topAppBarColors(),
+                actions = {
+                    var menuExpanded by remember { mutableStateOf(false) }
+                    IconButton(onClick = { menuExpanded = !menuExpanded }) {
+                        Icon(Icons.Filled.MoreVert, contentDescription = "Configuración")
+                    }
+                    DropdownMenu(expanded = menuExpanded, onDismissRequest = { menuExpanded = false }) {
+                        DropdownMenuItem(
+                            text = { Text(if (vm.logNewestFirst) "Nuevos arriba ✓" else "Nuevos arriba") },
+                            onClick = { 
+                                if (!vm.logNewestFirst) vm.toggleLogOrder()
+                                menuExpanded = false 
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text(if (!vm.logNewestFirst) "Nuevos abajo ✓" else "Nuevos abajo") },
+                            onClick = { 
+                                if (vm.logNewestFirst) vm.toggleLogOrder()
+                                menuExpanded = false 
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Ocultar/Mostrar log") },
+                            onClick = { vm.toggleLogVisibility(); menuExpanded = false }
+                        )
+                        androidx.compose.material3.Divider()
+                        DropdownMenuItem(
+                            text = { Text("Cerrar Sesión") },
+                            onClick = { 
+                                menuExpanded = false
+                                onLogout()
+                            }
+                        )
+                    }
+                }
+            )
+        }
+    ) { innerPadding ->
+        // Sección principal: layout vertical con padding
+        Column(
+            modifier = modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .padding(16.dp)
+        ) {
         // Card: selección de dispositivo emparejado
         Text("Dispositivo", color = Color.Gray)
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
@@ -443,6 +458,7 @@ fun AppScreen(vm: BluetoothViewModel, modifier: Modifier = Modifier) {
                         .padding(12.dp)
                 )
             }
+        }
         }
     }
 }

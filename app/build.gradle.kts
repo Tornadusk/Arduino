@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.ksp)
 }
 
 android {
@@ -51,6 +52,21 @@ dependencies {
     implementation(libs.androidx.compose.material3)
     // Material Icons (needed for Icons.Filled.Mic/Delete)
     implementation("androidx.compose.material:material-icons-extended")
+    
+    // Room Database
+    implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.room.ktx)
+    ksp(libs.androidx.room.compiler)
+    
+    // DataStore
+    implementation(libs.androidx.datastore.preferences)
+    
+    // Navigation
+    implementation(libs.androidx.navigation.compose)
+    
+    // Security/Crypto
+    implementation(libs.androidx.security.crypto)
+    
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
