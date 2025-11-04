@@ -16,8 +16,19 @@
    2.7. [Configuración de Interconexión Múltiple (2.1.4.7)](#27-configuración-de-interconexión-múltiple-2147)
    2.8. [Evaluación de Estabilidad y Eficiencia (2.1.4.8)](#28-evaluación-de-estabilidad-y-eficiencia-2148)
 3. [Conclusiones](#3-conclusiones)
-4. [Referencias](#4-referencias)
-5. [Anexos](#5-anexos)
+4. [Reflexión sobre la Elección de Herramientas](#4-reflexión-sobre-la-elección-de-herramientas)
+5. [Referencias](#5-referencias)
+6. [Anexos](#6-anexos)
+
+---
+
+## LINK DEL GITHUB
+
+El código fuente completo de esta aplicación está disponible en el siguiente repositorio de GitHub:
+
+**Repositorio**: [https://github.com/tu-usuario/arduinotb](https://github.com/tu-usuario/arduinotb)
+
+> **Nota**: Reemplaza `tu-usuario` con tu nombre de usuario de GitHub y `arduinotb` con el nombre real de tu repositorio.
 
 ---
 
@@ -601,7 +612,126 @@ fun refreshPaired() {
 
 ---
 
-## 4. REFERENCIAS
+## 4. REFLEXIÓN SOBRE LA ELECCIÓN DE HERRAMIENTAS
+
+La selección de tecnologías y herramientas para este proyecto fue cuidadosamente considerada basándose en criterios de eficiencia, mantenibilidad, escalabilidad y adecuación a los requisitos del sistema IoT. A continuación se presenta la justificación de cada elección:
+
+### 4.1 Android con Jetpack Compose
+
+**¿Por qué se eligió?**
+- **Declarativo y Moderno**: Jetpack Compose permite construir interfaces de usuario de forma declarativa, reduciendo significativamente la cantidad de código necesario comparado con el sistema tradicional de Views XML.
+- **Desarrollo Rápido**: La sintaxis de Compose es más intuitiva y permite iteraciones más rápidas durante el desarrollo.
+- **Compatibilidad**: Es la tecnología oficial recomendada por Google para nuevas aplicaciones Android, asegurando soporte a largo plazo.
+- **Rendimiento**: Compose genera código optimizado que se ejecuta eficientemente en dispositivos Android.
+
+**Alternativas consideradas**: XML con Views tradicionales (rechazado por ser más verboso y menos mantenible).
+
+### 4.2 Kotlin
+
+**¿Por qué se eligió?**
+- **Lenguaje Oficial de Android**: Kotlin es el lenguaje preferido por Google para desarrollo Android desde 2017.
+- **Seguridad de Tipos**: Previene errores comunes en tiempo de compilación, crucial para aplicaciones IoT que requieren alta confiabilidad.
+- **Concisión**: Sintaxis más limpia que Java, reduciendo el código boilerplate.
+- **Corrutinas**: Soporte nativo para programación asíncrona, esencial para operaciones Bluetooth no bloqueantes.
+- **Interoperabilidad**: Compatible al 100% con código Java existente si fuera necesario.
+
+**Alternativas consideradas**: Java (rechazado por ser más verboso y tener menos soporte para programación asíncrona moderna).
+
+### 4.3 Bluetooth Classic (SPP - Serial Port Profile)
+
+**¿Por qué se eligió?**
+- **Compatibilidad con Arduino**: La mayoría de módulos Bluetooth para Arduino (HC-05, HC-06, etc.) utilizan Bluetooth Classic.
+- **Simplicidad**: El perfil SPP emula un puerto serial, facilitando la comunicación bidireccional sin protocolos complejos.
+- **Rango y Estabilidad**: Bluetooth Classic ofrece mejor rango y estabilidad de conexión que Bluetooth Low Energy (BLE) para aplicaciones de control continuo.
+- **Bajo Latencia**: Ideal para comandos en tiempo real donde el retraso es crítico.
+
+**Alternativas consideradas**: Bluetooth Low Energy (BLE) (rechazado por requerir más complejidad en la implementación y menor rango efectivo).
+
+### 4.4 Arquitectura MVVM (Model-View-ViewModel)
+
+**¿Por qué se eligió?**
+- **Separación de Responsabilidades**: Facilita el mantenimiento y testing del código separando la lógica de negocio de la interfaz de usuario.
+- **Ciclo de Vida**: ViewModel sobrevive a cambios de configuración (rotación de pantalla), preservando el estado de la aplicación.
+- **Testabilidad**: Permite probar la lógica de negocio independientemente de la UI.
+- **Integración con Compose**: Compatible de forma nativa con Jetpack Compose mediante StateFlow y LiveData.
+
+**Alternativas consideradas**: MVC (rechazado por tener acoplamiento más fuerte) y MVP (rechazado por requerir más código boilerplate).
+
+### 4.5 Room Database
+
+**¿Por qué se eligió?**
+- **Abstracción SQLite**: Room proporciona una capa de abstracción sobre SQLite, reduciendo código repetitivo y errores.
+- **Compilación Segura**: Verifica queries SQL en tiempo de compilación, previniendo errores de ejecución.
+- **Corrutinas**: Soporte nativo para Kotlin Coroutines, facilitando operaciones asíncronas de base de datos.
+- **Type Safety**: Utiliza anotaciones y tipos seguros, reduciendo errores de tipo.
+- **Migraciones**: Facilita actualizaciones del esquema de base de datos de forma controlada.
+
+**Alternativas consideradas**: SQLite directo (rechazado por requerir más código manual) y Realm (rechazado por ser más pesado y tener curva de aprendizaje más pronunciada).
+
+### 4.6 Material Design 3
+
+**¿Por qué se eligió?**
+- **Estándar de la Industria**: Material Design 3 es el sistema de diseño oficial de Google, ampliamente reconocido y familiar para usuarios.
+- **Componentes Pre-construidos**: Ofrece una amplia gama de componentes listos para usar (Buttons, Cards, TextFields, etc.).
+- **Temas Personalizables**: Permite fácil personalización de colores, tipografías y estilos manteniendo consistencia.
+- **Accesibilidad**: Los componentes Material incluyen soporte para accesibilidad por defecto.
+- **Integración con Compose**: Material 3 tiene soporte nativo para Jetpack Compose.
+
+**Alternativas consideradas**: Custom UI (rechazado por requerir más tiempo de desarrollo y posible inconsistencia visual).
+
+### 4.7 DataStore para Preferencias
+
+**¿Por qué se eligió?**
+- **Asíncrono por Defecto**: Utiliza Kotlin Coroutines, evitando bloqueos del hilo principal.
+- **Type Safety**: Permite almacenar tipos complejos de forma segura.
+- **Moderno**: Reemplazo recomendado de SharedPreferences, que es síncrono y puede causar ANRs (Application Not Responding).
+- **Encriptación**: Soporta encriptación de datos sensibles como sesiones de usuario.
+
+**Alternativas consideradas**: SharedPreferences (rechazado por ser síncrono y potencialmente causar problemas de rendimiento).
+
+### 4.8 Navigation Compose
+
+**¿Por qué se eligió?**
+- **Type-Safe**: Utiliza rutas con tipos seguros, previniendo errores de navegación en tiempo de compilación.
+- **Integración Nativa**: Diseñado específicamente para Compose, evitando la necesidad de fragmentos.
+- **Gestión de Estado**: Facilita la gestión del estado de autenticación y navegación entre pantallas.
+- **Deep Linking**: Soporte nativo para deep links y navegación compleja.
+
+**Alternativas consideradas**: Navigation Component tradicional con Fragments (rechazado por requerir Views XML y ser menos compatible con Compose).
+
+### 4.9 Corrutinas de Kotlin
+
+**¿Por qué se eligió?**
+- **Programación Asíncrona Moderna**: Permite escribir código asíncrono de forma secuencial y legible.
+- **Gestión de Concurrencia**: Facilita la gestión de múltiples operaciones simultáneas (Bluetooth, UI, base de datos).
+- **Cancelación**: Soporte nativo para cancelación de operaciones, importante para evitar memory leaks.
+- **Lightweight**: Más eficiente que threads tradicionales para operaciones I/O.
+
+**Alternativas consideradas**: Threads de Java (rechazado por ser más pesados y difíciles de gestionar) y RxJava (rechazado por tener curva de aprendizaje más pronunciada y ser más complejo).
+
+### 4.10 SHA-256 para Hash de Contraseñas
+
+**¿Por qué se eligió?**
+- **Estándar de Seguridad**: SHA-256 es un algoritmo de hash criptográfico ampliamente aceptado y probado.
+- **Unidireccional**: Garantiza que las contraseñas no puedan ser recuperadas del hash, solo verificadas.
+- **Nativo en Java/Kotlin**: Disponible en la biblioteca estándar sin dependencias externas.
+- **Rendimiento**: Balance adecuado entre seguridad y rendimiento para aplicaciones móviles.
+
+**Alternativas consideradas**: bcrypt (rechazado por requerir dependencias externas y ser más lento) y MD5 (rechazado por ser inseguro y obsoleto).
+
+### 4.11 SpeechRecognizer para Control por Voz
+
+**¿Por qué se eligió?**
+- **API Nativa de Android**: No requiere dependencias externas ni servicios de terceros.
+- **Funcionalidad sin Internet**: Funciona offline después de la descarga inicial del modelo de idioma.
+- **Integración Simple**: Fácil de integrar con el sistema de reconocimiento de voz de Android.
+- **Soporte Multiidioma**: Soporta múltiples idiomas incluyendo español.
+
+**Alternativas consideradas**: Google Cloud Speech-to-Text (rechazado por requerir internet y tener costos asociados) y servicios de terceros (rechazado por depender de servicios externos).
+
+---
+
+## 5. REFERENCIAS
 
 - Android Developers - Bluetooth Overview: https://developer.android.com/guide/topics/connectivity/bluetooth
 - Material Design 3: https://m3.material.io/
@@ -611,7 +741,7 @@ fun refreshPaired() {
 
 ---
 
-## 5. ANEXOS
+## 6. ANEXOS
 
 ### Anexo A: Capturas de Pantalla
 
