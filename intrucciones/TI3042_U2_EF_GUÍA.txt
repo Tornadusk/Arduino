@@ -1,0 +1,83 @@
+
+
+Unidad 2Aplicaciones Móviles AndroidAprendizaje Esperado2.1 Resuelve una problemática para la interconexión de dispositivos IoT, mediante el desarrollo de una aplicación móvil seleccionando la solución más pertinente para el análisis realizado.Criterios de Evaluación2.1.1 Identifica herramientas de desarrollo móvil, siguiendo estándar de diseño de aplicaciones Android.
+2.1.2 Produce aplicación móvil Android, con uso de conexiones inalámbricas de la forma más pertinente a problemática planteada.
+2.1.3 Emplea estándar ISO de seguridad de aplicaciones IOT, siguiendo el lineamiento de industria OT.
+2.1.4 Demuestra interconexión entre aplicaciones móviles, mediante conexión inalámbrica.
+
+
+
+
+
+
+
+
+
+
+
+I. Presentación
+Las aplicaciones móviles están transformando la manera en que interactuamos con la tecnología en distintos ámbitos, desde la automatización de procesos hasta la optimización de la comunicación en entornos industriales. Su desarrollo no solo fortalece competencias en programación, sino que también permite abordar problemáticas reales mediante soluciones innovadoras.
+
+En este contexto, se propone que cada estudiante, de forma individual, desarrolle una aplicación móvil (APK) en Android Studio, basada en una problemática seleccionada y considerando lineamientos para la industria OT. A lo largo del curso, se realizarán actividades que contribuirán a la construcción de esta aplicación, la cual será el entregable principal de la Unidad 4.
+
+En esta unidad en particular, se contempla una preentrega como parte de la evaluación formativa, que consistirá en un avance de la evaluación sumativa. Este avance permitirá a los estudiantes recibir retroalimentación antes de la entrega final y será evaluado mediante una lista de cotejo. Como entregable, cada estudiante deberá presentar un prototipo funcional de su aplicación móvil, demostrando su desarrollo y operatividad en un dispositivo Android.
+
+
+II. Instrucciones generales
+
+1. Para el desarrollo de esta unidad podrán seguir con los equipos formados en la unidad anterior. Pero recordando que se trabajará de forma individual.
+2. Cada equipo debe seguir con el problema planteado en la unidad anterior, pues se desarrollará durante toda la asignatura, involucrando las 4 unidades.
+3. Cada proyecto deberá involucrar el desarrollo de una aplicación móvil que permita interactuar al menos a dos dispositivos Android, ya sea mediante conectividad WiFi o Bluetooth. 
+4. Dado lo anterior, cada grupo presentará las funcionalidades que deberá abordar la aplicación móvil, la cual debe ser validada por el docente.
+5. El foco principal de esta entrega sumativa es desarrollar una aplicación móvil que pueda ser desplegada en al menos dos dispositivos Android, simulando funcionalidades de control y monitoreo de dispositivos IoT. 
+6. Se sugiere revisar el instrumento de evaluación. Esto les permitirá tener claridad de los aspectos que serán evaluados, optimizar los tiempos y priorizando las actividades que permitan alcanzar los plazos dados y la meta fijada para esta unidad de aprendizaje. 
+ 
+
+
+III. Actividades para la evaluación
+Se deben desarrollar las siguientes tareas en esta segunda unidad:
+Paso 1: Definir el proyecto:
+* Identificación de la problemática:
+Piensa en la problemática que trataste en la unidad anterior. ¿Qué dispositivos o sistemas necesitas conectar? ¿Cuál es el objetivo de la comunicación entre estos dispositivos? A partir de esta reflexión, define las funcionalidades clave que debe tener tu aplicación para resolver esta problemática. Piensa en aspectos como qué tipo de interacción quieres lograr (enviar o recibir datos, controlar dispositivos, etc.) y qué características debería tener la app para ser efectiva.
+* Selección de herramientas de desarrollo:
+Una vez que tengas claras las funcionalidades, es momento de pensar en las herramientas y tecnologías que usarás. La aplicación será desarrollada en Android Studio utilizando Kotlin. Si estás considerando usar otras herramientas o bibliotecas, asegúrate de que sean adecuadas para el desarrollo de aplicaciones móviles y permitan integrar la conectividad con dispositivos IoT. Justifica tu elección de herramientas con base en estándares de desarrollo de aplicaciones Android.
+* Revisión con el docente:
+Una vez que tengas claro qué herramientas usarás y qué funcionalidades tendrá tu aplicación, comparte tu idea con el docente. El docente te dará retroalimentación sobre la factibilidad de tu plan y si está alineado con los criterios de evaluación, para asegurarse de que estés en el camino correcto.
+Paso 2: Diseñar la solución:
+* Definir el método de comunicación inalámbrica:
+El siguiente paso es decidir cómo se conectará tu aplicación a los dispositivos IoT. Puedes usar Bluetooth, Wi-Fi, o alguna otra tecnología inalámbrica. La elección debe basarse en la naturaleza de la problemática que estás tratando de resolver. Por ejemplo, si se requiere una conexión a corta distancia, el Bluetooth podría ser una buena opción. Justifica por qué eliges una tecnología sobre otra.
+* Diseñar la interfaz de usuario (UI):
+Antes de comenzar a programar, elabora un mockup o bosquejo de la interfaz de usuario de la aplicación. Esto no tiene que ser algo muy detallado, pero debe mostrar las pantallas principales de la app, cómo el usuario interactuará con ella y cómo navegará por las diferentes funcionalidades. También es importante que en este diseño incluyas cómo se gestionará la comunicación con los dispositivos IoT, es decir, cómo se visualizarán los datos o cómo el usuario podrá interactuar con los dispositivos conectados.
+* Revisión con el docente:
+Una vez tengas tu diseño, compártelo con el docente para recibir retroalimentación sobre la funcionalidad y la estética de la app. Asegúrate de que el diseño sea adecuado para las funcionalidades que planeas implementar y que cumpla con los requisitos del desafío.
+Paso 3: Construir la aplicación:
+* Programación de la aplicación:
+Utilizando Android Studio y Kotlin, empieza a programar la aplicación según lo planeado. Primero, crea las actividades necesarias para gestionar las pantallas de tu app y las interacciones con el usuario. Después, asegúrate de que la aplicación tenga los permisos necesarios para interactuar con el hardware del dispositivo, como los permisos para usar Bluetooth o Wi-Fi, según sea necesario.
+* Implementación de medidas de seguridad IoT:
+Las aplicaciones que interactúan con dispositivos IoT deben ser seguras, ya que pueden ser vulnerables a ataques. Asegúrate de implementar medidas de seguridad siguiendo la norma ISO 27400, que cubre aspectos como la protección de datos, control de acceso y manejo de credenciales. Implementa las prácticas recomendadas para la seguridad en aplicaciones IoT, como cifrar la información sensible y garantizar que las conexiones inalámbricas estén protegidas.
+* Pruebas de funcionamiento:
+Una vez que hayas programado la aplicación, realiza pruebas para asegurarte de que funciona correctamente. Conéctate a los dispositivos IoT y verifica que se pueda establecer la comunicación de forma efectiva. Asegúrate también de que la aplicación sea estable y que no presente errores al interactuar con los dispositivos. Si encuentras problemas, ajusta el código hasta que todo funcione como esperas.
+
+
+
+
+
+Revisión de documentos en el AAI.
+
+En el AAI revisa los siguientes recursos:
+* Escala de apreciación.
+Indicaciones de entrega
+* En la plataforma AAI se habilitará una tarea para que los estudiantes suban un bloc de notas con un link a GitHub con el código de la aplicación desarrollada. Esto deberá ser cargado en la fecha correspondiente, antes de que finalice la clase del día de la evaluación.
+* Una vez finalizado el plazo, se bloqueará el acceso a subir la tarea. 
+* Se recomienda evitar realizar la carga en el último minuto, dado que existe la posibilidad de fallas en el sistema y problemas de conexión que podrían surgir. Es aconsejable planificar con antelación para prevenir inconvenientes.
+* NO SE RECIBIRÁN ENTREGAS POR CORREO. 
+* Aquellos que no asistan a las fechas de evaluación recibirán una calificación mínima, a menos que justifiquen su ausencia de acuerdo con los protocolos establecidos en el Reglamento Académico. Es necesario que informen oportunamente al docente a través de correo electrónico para validar su situación.
+
+
+
+
+
+
+Aplicaciones Móviles para IoT
+TI3042
+
