@@ -52,8 +52,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Box
+import com.victorgangas.arduinotb.R
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.victorgangas.arduinotb.ui.theme.ArduinotbTheme
@@ -78,6 +83,14 @@ import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.foundation.layout.width
+import androidx.compose.material3.Slider
+import androidx.compose.material3.Switch
+import androidx.compose.material3.RadioButton
+import androidx.compose.material3.RadioButtonDefaults
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.Alignment
 
 @OptIn(ExperimentalMaterial3Api::class)
 class MainActivity : ComponentActivity() {
@@ -93,7 +106,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         requestBtPermissions()
         setContent {
-            ArduinotbTheme {
+            ArduinotbTheme(darkTheme = bluetoothVm.useDarkTheme) {
                 val navController = androidx.navigation.compose.rememberNavController()
                 
                 com.victorgangas.arduinotb.navigation.NavGraph(
@@ -136,6 +149,17 @@ class BluetoothViewModel : ViewModel() {
     var logNewestFirst by mutableStateOf(true)
         private set
     var showLog by mutableStateOf(true)
+        private set
+    // Configuración de UI
+    var logFontSize by mutableStateOf(14f) // Tamaño de fuente del log en sp (rango 10-20)
+        private set
+    var showFontSizeSlider by mutableStateOf(false) // Mostrar/ocultar slider de tamaño de fuente
+        private set
+    var useDarkTheme by mutableStateOf(false) // Tema oscuro o claro
+        private set
+    var showUIConfig by mutableStateOf(true) // Mostrar/ocultar configuración de interfaz
+        private set
+    var uiConfigAboveLog by mutableStateOf(true) // true = arriba del log, false = abajo del log
         private set
 
     private var socket: BluetoothSocket? = null
@@ -250,6 +274,14 @@ class BluetoothViewModel : ViewModel() {
     fun clearLog() { log = "" }
     fun toggleLogOrder() { logNewestFirst = !logNewestFirst }
     fun toggleLogVisibility() { showLog = !showLog }
+    // Funciones para configuración de UI
+    fun updateLogFontSize(size: Float) { 
+        logFontSize = size.coerceIn(10f, 20f) 
+    }
+    fun toggleFontSizeSlider() { showFontSizeSlider = !showFontSizeSlider }
+    fun updateDarkTheme(enabled: Boolean) { useDarkTheme = enabled }
+    fun toggleUIConfigVisibility() { showUIConfig = !showUIConfig }
+    fun toggleUIConfigPosition() { uiConfigAboveLog = !uiConfigAboveLog }
 
     @SuppressLint("MissingPermission")
     fun toggleVoice(activity: ComponentActivity) {
@@ -319,68 +351,88 @@ fun AppScreen(
     var expanded by remember { mutableStateOf(false) }
     val devices = vm.pairedDevices
     val selected = vm.selectedDevice
-    val scroll = rememberScrollState()
+    val mainScroll = rememberScrollState()
+    val logScroll = rememberScrollState()
     val clip = LocalClipboardManager.current
     val context = LocalContext.current
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         topBar = {
-            TopAppBar(
-                title = { Text("Arduino BT Controller") },
-                colors = TopAppBarDefaults.topAppBarColors(),
-                actions = {
-                    var menuExpanded by remember { mutableStateOf(false) }
-                    IconButton(onClick = { menuExpanded = !menuExpanded }) {
-                        Icon(Icons.Filled.MoreVert, contentDescription = "Configuración")
+                TopAppBar(
+                    title = { Text("Arduino BT Controller") },
+                    colors = TopAppBarDefaults.topAppBarColors(),
+                    actions = {
+                        var menuExpanded by remember { mutableStateOf(false) }
+                        IconButton(onClick = { menuExpanded = !menuExpanded }) {
+                            Icon(Icons.Filled.MoreVert, contentDescription = "Configuración")
+                        }
+                        DropdownMenu(expanded = menuExpanded, onDismissRequest = { menuExpanded = false }) {
+                            DropdownMenuItem(
+                                text = { Text("Mi Perfil") },
+                                onClick = { 
+                                    menuExpanded = false
+                                    onNavigateToProfile()
+                                }
+                            )
+                            androidx.compose.material3.Divider()
+                            DropdownMenuItem(
+                                text = { Text(if (vm.logNewestFirst) "Nuevos arriba ✓" else "Nuevos arriba") },
+                                onClick = { 
+                                    if (!vm.logNewestFirst) vm.toggleLogOrder()
+                                    menuExpanded = false 
+                                }
+                            )
+                            DropdownMenuItem(
+                                text = { Text(if (!vm.logNewestFirst) "Nuevos abajo ✓" else "Nuevos abajo") },
+                                onClick = { 
+                                    if (vm.logNewestFirst) vm.toggleLogOrder()
+                                    menuExpanded = false 
+                                }
+                            )
+                            DropdownMenuItem(
+                                text = { Text("Ocultar/Mostrar log") },
+                                onClick = { vm.toggleLogVisibility(); menuExpanded = false }
+                            )
+                            DropdownMenuItem(
+                                text = { Text(if (vm.showUIConfig) "Ocultar configuración" else "Mostrar configuración") },
+                                onClick = { vm.toggleUIConfigVisibility(); menuExpanded = false }
+                            )
+                            DropdownMenuItem(
+                                text = { Text(if (vm.uiConfigAboveLog) "Config arriba del log ✓" else "Config arriba del log") },
+                                onClick = { 
+                                    if (!vm.uiConfigAboveLog) vm.toggleUIConfigPosition()
+                                    menuExpanded = false 
+                                }
+                            )
+                            DropdownMenuItem(
+                                text = { Text(if (!vm.uiConfigAboveLog) "Config abajo del log ✓" else "Config abajo del log") },
+                                onClick = { 
+                                    if (vm.uiConfigAboveLog) vm.toggleUIConfigPosition()
+                                    menuExpanded = false 
+                                }
+                            )
+                            androidx.compose.material3.Divider()
+                            DropdownMenuItem(
+                                text = { Text("Cerrar Sesión") },
+                                onClick = { 
+                                    menuExpanded = false
+                                    onLogout()
+                                }
+                            )
+                        }
                     }
-                    DropdownMenu(expanded = menuExpanded, onDismissRequest = { menuExpanded = false }) {
-                        DropdownMenuItem(
-                            text = { Text("Mi Perfil") },
-                            onClick = { 
-                                menuExpanded = false
-                                onNavigateToProfile()
-                            }
-                        )
-                        androidx.compose.material3.Divider()
-                        DropdownMenuItem(
-                            text = { Text(if (vm.logNewestFirst) "Nuevos arriba ✓" else "Nuevos arriba") },
-                            onClick = { 
-                                if (!vm.logNewestFirst) vm.toggleLogOrder()
-                                menuExpanded = false 
-                            }
-                        )
-                        DropdownMenuItem(
-                            text = { Text(if (!vm.logNewestFirst) "Nuevos abajo ✓" else "Nuevos abajo") },
-                            onClick = { 
-                                if (vm.logNewestFirst) vm.toggleLogOrder()
-                                menuExpanded = false 
-                            }
-                        )
-                        DropdownMenuItem(
-                            text = { Text("Ocultar/Mostrar log") },
-                            onClick = { vm.toggleLogVisibility(); menuExpanded = false }
-                        )
-                        androidx.compose.material3.Divider()
-                        DropdownMenuItem(
-                            text = { Text("Cerrar Sesión") },
-                            onClick = { 
-                                menuExpanded = false
-                                onLogout()
-                            }
-                        )
-                    }
-                }
-            )
-        }
-    ) { innerPadding ->
-        // Sección principal: layout vertical con padding
-        Column(
-            modifier = modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .padding(16.dp)
-        ) {
+                )
+            }
+        ) { innerPadding ->
+            // Sección principal: layout vertical con padding y scroll
+            Column(
+                modifier = modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                    .padding(16.dp)
+                    .verticalScroll(mainScroll)
+            ) {
         // Card: selección de dispositivo emparejado
         Text("Dispositivo", color = Color.Gray)
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
@@ -450,28 +502,149 @@ fun AppScreen(
         }
 
         Spacer(Modifier.height(16.dp))
-        // Card: log de comunicación + limpiar/copiar (ocultable)
-        if (vm.showLog) {
-            Card(colors = CardDefaults.cardColors(), elevation = CardDefaults.cardElevation(defaultElevation = 6.dp), modifier = Modifier.fillMaxWidth().weight(1f)) {
-                Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-                    Text("Log")
-                    Row {
-                        IconButton(onClick = { clip.setText(buildAnnotatedString { append(vm.log) }) }) { Icon(Icons.Filled.ContentCopy, contentDescription = "Copiar log") }
-                        IconButton(onClick = { vm.clearLog() }) { Icon(Icons.Filled.Delete, contentDescription = "Limpiar log") }
+        
+        // Configuración de UI (mostrar arriba del log si uiConfigAboveLog es true)
+        if (vm.showUIConfig && vm.uiConfigAboveLog) {
+            // Card: Configuración de UI (Tema y tamaño de fuente)
+            Text("Configuración de Interfaz", color = Color.Gray)
+            Card(colors = CardDefaults.cardColors(), elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)) {
+                Column(modifier = Modifier.padding(12.dp)) {
+                    // RadioButtons para tema claro/oscuro
+                    Text("Tema", modifier = Modifier.padding(bottom = 8.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            RadioButton(
+                                selected = !vm.useDarkTheme,
+                                onClick = { vm.updateDarkTheme(false) },
+                                colors = RadioButtonDefaults.colors()
+                            )
+                            Text("Claro", modifier = Modifier.padding(start = 4.dp))
+                        }
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            RadioButton(
+                                selected = vm.useDarkTheme,
+                                onClick = { vm.updateDarkTheme(true) },
+                                colors = RadioButtonDefaults.colors()
+                            )
+                            Text("Oscuro", modifier = Modifier.padding(start = 4.dp))
+                        }
+                    }
+                    
+                    Spacer(Modifier.height(16.dp))
+                    
+                    // Switch para mostrar/ocultar slider de tamaño de fuente
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text("Ajustar tamaño de fuente del log")
+                        Switch(
+                            checked = vm.showFontSizeSlider,
+                            onCheckedChange = { vm.toggleFontSizeSlider() }
+                        )
+                    }
+                    
+                    // Slider para cambiar tamaño de fuente (visible solo si el switch está activo)
+                    if (vm.showFontSizeSlider) {
+                        Spacer(Modifier.height(8.dp))
+                        Text("Tamaño: ${vm.logFontSize.toInt()} sp", modifier = Modifier.padding(bottom = 4.dp))
+                        Slider(
+                            value = vm.logFontSize,
+                            onValueChange = { vm.updateLogFontSize(it) },
+                            valueRange = 10f..20f,
+                            steps = 9, // 10 valores: 10, 11, 12, ..., 20
+                            modifier = Modifier.fillMaxWidth()
+                        )
                     }
                 }
-                OutlinedTextField(
-                    value = vm.log,
-                    onValueChange = {},
-                    readOnly = true,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f)
-                        .verticalScroll(scroll)
-                        .padding(12.dp)
-                )
+            }
+            Spacer(Modifier.height(16.dp))
+        }
+        
+        // Card: log de comunicación + limpiar/copiar (ocultable)
+        if (vm.showLog) {
+            Card(colors = CardDefaults.cardColors(), elevation = CardDefaults.cardElevation(defaultElevation = 6.dp), modifier = Modifier.fillMaxWidth()) {
+                Column(modifier = Modifier.padding(12.dp)) {
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                        Text("Log")
+                        Row {
+                            IconButton(onClick = { clip.setText(buildAnnotatedString { append(vm.log) }) }) { Icon(Icons.Filled.ContentCopy, contentDescription = "Copiar log") }
+                            IconButton(onClick = { vm.clearLog() }) { Icon(Icons.Filled.Delete, contentDescription = "Limpiar log") }
+                        }
+                    }
+                    OutlinedTextField(
+                        value = vm.log,
+                        onValueChange = {},
+                        readOnly = true,
+                        textStyle = TextStyle(fontSize = vm.logFontSize.sp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(300.dp)
+                            .verticalScroll(logScroll)
+                    )
+                }
             }
         }
+        
+        // Configuración de UI (mostrar abajo del log si uiConfigAboveLog es false)
+        if (vm.showUIConfig && !vm.uiConfigAboveLog) {
+            Spacer(Modifier.height(16.dp))
+            // Card: Configuración de UI (Tema y tamaño de fuente)
+            Text("Configuración de Interfaz", color = Color.Gray)
+            Card(colors = CardDefaults.cardColors(), elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)) {
+                Column(modifier = Modifier.padding(12.dp)) {
+                    // RadioButtons para tema claro/oscuro
+                    Text("Tema", modifier = Modifier.padding(bottom = 8.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            RadioButton(
+                                selected = !vm.useDarkTheme,
+                                onClick = { vm.updateDarkTheme(false) },
+                                colors = RadioButtonDefaults.colors()
+                            )
+                            Text("Claro", modifier = Modifier.padding(start = 4.dp))
+                        }
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            RadioButton(
+                                selected = vm.useDarkTheme,
+                                onClick = { vm.updateDarkTheme(true) },
+                                colors = RadioButtonDefaults.colors()
+                            )
+                            Text("Oscuro", modifier = Modifier.padding(start = 4.dp))
+                        }
+                    }
+                    
+                    Spacer(Modifier.height(16.dp))
+                    
+                    // Switch para mostrar/ocultar slider de tamaño de fuente
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text("Ajustar tamaño de fuente del log")
+                        Switch(
+                            checked = vm.showFontSizeSlider,
+                            onCheckedChange = { vm.toggleFontSizeSlider() }
+                        )
+                    }
+                    
+                    // Slider para cambiar tamaño de fuente (visible solo si el switch está activo)
+                    if (vm.showFontSizeSlider) {
+                        Spacer(Modifier.height(8.dp))
+                        Text("Tamaño: ${vm.logFontSize.toInt()} sp", modifier = Modifier.padding(bottom = 4.dp))
+                        Slider(
+                            value = vm.logFontSize,
+                            onValueChange = { vm.updateLogFontSize(it) },
+                            valueRange = 10f..20f,
+                            steps = 9, // 10 valores: 10, 11, 12, ..., 20
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                }
+            }
+        }
+            }
         }
     }
-}

@@ -1,6 +1,10 @@
 package com.victorgangas.arduinotb.ui.auth
 
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -11,7 +15,11 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -20,6 +28,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.victorgangas.arduinotb.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -40,14 +49,34 @@ fun LoginScreen(
         }
     }
     
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Iniciar Sesión") },
-                colors = TopAppBarDefaults.topAppBarColors()
-            )
-        }
-    ) { paddingValues ->
+    Box(modifier = Modifier.fillMaxSize()) {
+        // Imagen de fondo - fondo.png
+        Image(
+            painter = painterResource(id = R.drawable.fondo),
+            contentDescription = null,
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Crop
+        )
+        
+        // Capa semitransparente sobre el fondo para oscurecerlo ligeramente
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.25f))
+        )
+        
+        Scaffold(
+            modifier = Modifier.fillMaxSize(),
+            containerColor = Color.Transparent,
+            topBar = {
+                TopAppBar(
+                    title = { Text("Iniciar Sesión") },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = Color.White.copy(alpha = 0.9f)
+                    )
+                )
+            }
+        ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -80,6 +109,10 @@ fun LoginScreen(
                 },
                 label = { Text("Usuario") },
                 singleLine = true,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedContainerColor = Color.White.copy(alpha = 0.9f),
+                    unfocusedContainerColor = Color.White.copy(alpha = 0.9f)
+                ),
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(bottom = 16.dp),
@@ -105,6 +138,10 @@ fun LoginScreen(
                     VisualTransformation.None 
                 else 
                     PasswordVisualTransformation(),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedContainerColor = Color.White.copy(alpha = 0.9f),
+                    unfocusedContainerColor = Color.White.copy(alpha = 0.9f)
+                ),
                 trailingIcon = {
                     IconButton(onClick = { passwordVisible = !passwordVisible }) {
                         Icon(
@@ -200,9 +237,31 @@ fun LoginScreen(
                     .fillMaxWidth()
                     .height(50.dp)
             ) {
-                Text("Crear Cuenta Nueva", fontSize = 16.sp)
-            }
-        }
-    }
-}
+                                                                 Text("Crear Cuenta Nueva", fontSize = 16.sp)
+             }
+         }
+         }
+         
+                   // Cuadro pequeño con imagen "INACAP" en la esquina superior derecha (sobre el Scaffold)
+          Card(
+              modifier = Modifier
+                  .align(Alignment.TopEnd)
+                  .padding(16.dp),
+              colors = CardDefaults.cardColors(
+                  containerColor = Color.White
+              ),
+              elevation = CardDefaults.cardElevation(defaultElevation = 12.dp),
+              shape = RoundedCornerShape(8.dp)
+          ) {
+                             Image(
+                   painter = painterResource(id = R.drawable.inacap),
+                   contentDescription = "INACAP",
+                   modifier = Modifier
+                       .padding(6.dp)
+                       .size(width = 100.dp, height = 50.dp),
+                   contentScale = ContentScale.Inside
+               )
+          }
+     }
+ }
 
