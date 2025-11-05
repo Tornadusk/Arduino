@@ -6,6 +6,11 @@
 ## ÍNDICE
 
 1. [Introducción](#1-introducción)
+   1.1. [Contexto](#11-contexto)
+   1.2. [Objetivos](#12-objetivos)
+   1.3. [Tecnologías Utilizadas](#13-tecnologías-utilizadas)
+   1.4. [Demostración de Funcionamiento](#14-demostración-de-funcionamiento)
+   1.5. [Lo que se Espera Aprender y Lograr](#15-lo-que-se-espera-aprender-y-lograr)
 2. [Desarrollo](#2-desarrollo)
    2.1. [Pantalla de Login (2.1.1.1)](#21-pantalla-de-login-2111)
    2.2. [Pantallas de Monitoreo y Activador (2.1.1.2)](#22-pantallas-de-monitoreo-y-activador-2112)
@@ -16,6 +21,10 @@
    2.7. [Configuración de Interconexión Múltiple (2.1.4.7)](#27-configuración-de-interconexión-múltiple-2147)
    2.8. [Evaluación de Estabilidad y Eficiencia (2.1.4.8)](#28-evaluación-de-estabilidad-y-eficiencia-2148)
 3. [Conclusiones](#3-conclusiones)
+   3.1. [Logros Alcanzados](#31-logros-alcanzados)
+   3.2. [Desafíos Superados](#32-desafíos-superados)
+   3.3. [Mejoras Futuras](#33-mejoras-futuras)
+   3.4. [Aprendizajes y Logros Personales](#34-aprendizajes-y-logros-personales)
 4. [Reflexión sobre la Elección de Herramientas](#4-reflexión-sobre-la-elección-de-herramientas)
 5. [Referencias](#5-referencias)
 6. [Anexos](#6-anexos)
@@ -61,6 +70,29 @@ Para complementar este informe, se incluye un video demostrativo que muestra el 
 - Control por voz
 
 **Video disponible en**: [Anexo D - Video Demostrativo](#anexo-d-video-demostrativo)
+
+### 1.5 Lo que se Espera Aprender y Lograr
+
+Al inicio de este proyecto, se establecieron las siguientes expectativas y objetivos de aprendizaje:
+
+**Expectativas de Aprendizaje:**
+- **Desarrollo Móvil con Android**: Adquirir competencias en el desarrollo de aplicaciones Android utilizando Jetpack Compose y Kotlin, comprendiendo las mejores prácticas y patrones de diseño modernos.
+- **Integración IoT**: Desarrollar habilidades para integrar dispositivos IoT (Arduino) con aplicaciones móviles, comprendiendo los protocolos de comunicación inalámbrica (Bluetooth Classic).
+- **Arquitectura de Software**: Aplicar principios de arquitectura MVVM para separar la lógica de negocio de la interfaz de usuario, facilitando el mantenimiento y testing.
+- **Seguridad en IoT**: Comprender e implementar medidas de seguridad basadas en estándares ISO/IEC 27001 y lineamientos OT para proteger comunicaciones y datos.
+- **Material Design**: Aprender a utilizar Material Design 3 para crear interfaces intuitivas y accesibles que mejoren la experiencia del usuario.
+
+**Objetivos a Lograr:**
+- Desarrollar una aplicación móvil funcional que se comunique efectivamente con dispositivos Arduino mediante Bluetooth.
+- Implementar un sistema de autenticación seguro que proteja el acceso a funcionalidades críticas.
+- Crear una interfaz de usuario moderna y responsive que permita monitorear y controlar dispositivos IoT en tiempo real.
+- Documentar adecuadamente el proceso de desarrollo, las decisiones técnicas y el cumplimiento de los criterios de evaluación.
+- Evaluar la estabilidad y eficiencia de la comunicación entre dispositivos en diferentes escenarios de uso.
+
+**Impacto Esperado:**
+- Adquirir experiencia práctica en el desarrollo de soluciones IoT móviles que puedan aplicarse en proyectos reales.
+- Desarrollar competencias técnicas que sean transferibles a otros proyectos de desarrollo móvil y sistemas embebidos.
+- Comprender los desafíos y soluciones en el desarrollo de aplicaciones IoT, incluyendo gestión de conexiones, seguridad y optimización de recursos.
 
 ---
 
@@ -604,11 +636,132 @@ fun refreshPaired() {
 - Validación de comandos según modo de operación
 - Integración de múltiples tecnologías (Bluetooth, Voz, RFID)
 
+### 3.4 Aprendizajes y Logros Personales
+
+A lo largo del desarrollo de este proyecto, se han consolidado aprendizajes significativos y se han alcanzado logros importantes tanto en aspectos técnicos como en competencias profesionales:
+
+**Aprendizajes Técnicos Alcanzados:**
+
+1. **Desarrollo con Jetpack Compose y Kotlin:**
+   - Adquisición de competencias en programación declarativa con Jetpack Compose, comprendiendo su flujo de recomposición y gestión de estado.
+   - Desarrollo de habilidades en Kotlin, especialmente en el uso de corrutinas para programación asíncrona y manejo de flujos de datos reactivos.
+   - Comprensión de la arquitectura MVVM y su implementación práctica en aplicaciones Android modernas.
+
+2. **Comunicación Bluetooth en Android:**
+   - Aprendizaje profundo sobre la implementación de Bluetooth Classic en Android, incluyendo gestión de permisos, emparejamiento de dispositivos y manejo de sockets RFCOMM.
+   - Desarrollo de habilidades para gestionar conexiones inalámbricas de forma asíncrona, evitando bloqueos del hilo principal y garantizando una experiencia fluida para el usuario.
+   - Comprensión de los desafíos inherentes a la comunicación inalámbrica, como manejo de desconexiones, reconexión automática y sincronización de estados.
+
+3. **Seguridad en Aplicaciones IoT:**
+   - Adquisición de conocimientos sobre estándares ISO/IEC 27001 y su aplicación práctica en sistemas IoT.
+   - Comprensión de los lineamientos de seguridad OT (Operational Technology) y su relevancia en sistemas industriales.
+   - Implementación de medidas de seguridad como hash de contraseñas, validación de dispositivos emparejados y encriptación a nivel de protocolo.
+
+4. **Material Design 3:**
+   - Desarrollo de habilidades en diseño de interfaces utilizando Material Design 3, creando interfaces intuitivas y accesibles.
+   - Comprensión de los principios de usabilidad y accesibilidad en el diseño de aplicaciones móviles.
+
+5. **Integración Hardware-Software:**
+   - Aprendizaje sobre la integración entre aplicaciones móviles y dispositivos embebidos (Arduino), comprendiendo protocolos de comunicación serial y manejo de comandos.
+   - Desarrollo de habilidades para diseñar protocolos de comunicación eficientes y robustos entre dispositivos.
+
+**Logros y Competencias Desarrolladas:**
+
+1. **Competencias en Desarrollo de Software:**
+   - Capacidad para desarrollar aplicaciones Android completas desde el diseño hasta la implementación y pruebas.
+   - Habilidad para aplicar patrones de diseño y arquitecturas de software apropiadas para cada contexto.
+   - Desarrollo de habilidades en depuración, optimización y resolución de problemas técnicos complejos.
+
+2. **Gestión de Proyecto:**
+   - Capacidad para planificar, organizar y ejecutar un proyecto de desarrollo de software de manera estructurada.
+   - Desarrollo de habilidades para documentar adecuadamente decisiones técnicas y procesos de desarrollo.
+   - Comprensión de la importancia de la iteración, el testing continuo y la retroalimentación en el desarrollo de software.
+
+3. **Pensamiento Crítico y Resolución de Problemas:**
+   - Desarrollo de habilidades para analizar problemas complejos, identificar soluciones apropiadas y tomar decisiones técnicas fundamentadas.
+   - Capacidad para evaluar diferentes alternativas tecnológicas y justificar la selección de herramientas y frameworks.
+
+4. **Aprendizaje Autónomo:**
+   - Desarrollo de la capacidad para aprender nuevas tecnologías y frameworks de forma independiente.
+   - Habilidad para buscar, evaluar y aplicar documentación técnica y recursos de aprendizaje.
+
+**Reflexión sobre el Proceso de Aprendizaje:**
+
+El desarrollo de este proyecto ha permitido no solo adquirir conocimientos técnicos específicos, sino también desarrollar competencias transversales que son fundamentales en el ámbito profesional. La integración de múltiples tecnologías (Android, Bluetooth, Arduino) ha requerido una comprensión holística de sistemas complejos, fomentando el pensamiento sistémico y la capacidad de integrar conocimientos de diferentes dominios.
+
+Además, los desafíos encontrados durante el desarrollo (como la gestión asíncrona de conexiones Bluetooth, la implementación de medidas de seguridad, y la optimización de recursos) han proporcionado oportunidades valiosas para desarrollar resiliencia, persistencia y habilidades de resolución de problemas.
+
+Este proyecto representa un paso significativo en el desarrollo profesional, consolidando aprendizajes teóricos con experiencia práctica y preparando el terreno para proyectos más complejos y desafiantes en el futuro.
+
 ### 3.3 Mejoras Futuras
 - Implementar encriptación adicional a nivel de aplicación
 - Agregar soporte para múltiples dispositivos simultáneos
 - Implementar autenticación de dos factores
 - Agregar logging más detallado para auditoría
+
+**a) Incorporación del Módulo ESP-WROOM-32 (Wi-Fi + Bluetooth Dual Mode)**
+
+Una mejora significativa para futuras versiones del proyecto sería la incorporación del módulo **ESP-WROOM-32**, que ofrece capacidades duales de conectividad inalámbrica:
+
+**Ventajas del ESP-WROOM-32:**
+- **Conectividad Dual**: Soporte simultáneo para Wi-Fi y Bluetooth Classic/Bluetooth Low Energy (BLE)
+- **Mayor Rango de Comunicación**: Wi-Fi permite control remoto a través de internet, superando las limitaciones de rango del Bluetooth
+- **IoT Cloud Ready**: Capacidad de integración con servicios en la nube (AWS IoT, Google Cloud IoT, etc.)
+- **Mayor Potencia de Procesamiento**: Procesador dual-core a 240 MHz con mayor capacidad de procesamiento que Arduino tradicionales
+- **Bajo Consumo**: Gestión eficiente de energía, ideal para sistemas embebidos
+
+**Aplicaciones Potenciales:**
+- Control remoto desde cualquier lugar con conexión a internet
+- Monitorización en tiempo real desde múltiples ubicaciones
+- Integración con sistemas de gestión de estacionamientos inteligentes
+- Alertas y notificaciones push a dispositivos móviles
+- Dashboard web para visualización de datos
+
+![Figura 7: Módulo ESP-WROOM-32 con capacidades Wi-Fi + Bluetooth Dual Mode](imagenes/esp32_wroom32.png)
+
+*Figura 7: Módulo ESP-WROOM-32 - Fuente: Espressif Systems*
+
+**b) Reemplazo de Materiales por Impresión 3D**
+
+Otra mejora importante sería el reemplazo de estructuras y carcasas tradicionales por componentes fabricados mediante **impresión 3D**, lo que aportaría numerosos beneficios:
+
+**Ventajas de la Impresión 3D:**
+- **Personalización**: Diseño de carcasas y soportes adaptados específicamente a las necesidades del proyecto
+- **Rapidez de Prototipado**: Iteración rápida de diseños y ajustes
+- **Costo Reducido**: Fabricación económica de componentes personalizados
+- **Durabilidad**: Materiales como PLA, PETG o ABS ofrecen buena resistencia mecánica
+- **Modularidad**: Facilidad para crear componentes modulares y reemplazables
+
+**Componentes Propuestos para Impresión 3D:**
+- Carcasa protectora para el módulo Arduino y sensores
+- Soporte para barrera/servo motor
+- Estructura para montaje del sensor ultrasónico
+- Caja de conexiones para el módulo RFID
+- Base y estructura general del sistema de estacionamiento
+
+**Materiales Impresos en 3D del Proyecto:**
+
+A continuación se muestran imágenes de algunos componentes ya fabricados mediante impresión 3D para este proyecto:
+
+![Figura 8: Carcasa impresa en 3D para módulo Arduino y sensores](https://ejemplo.com/imagenes/carcasa_arduino_3d.jpg)
+
+*Figura 8: Carcasa personalizada impresa en 3D para protección del módulo Arduino y sensores*
+
+![Figura 9: Soporte para barrera y servo motor impreso en 3D](https://ejemplo.com/imagenes/soporte_barrera_3d.jpg)
+
+*Figura 9: Soporte estructural impreso en 3D para montaje de la barrera y servo motor*
+
+![Figura 10: Estructura completa del sistema impresa en 3D](https://ejemplo.com/imagenes/estructura_completa_3d.jpg)
+
+*Figura 10: Vista general de la estructura completa del sistema de estacionamiento con componentes impresos en 3D*
+
+**Consideraciones Técnicas:**
+- **Material Recomendado**: PETG para exteriores (resistente a UV y condiciones climáticas) o PLA+ para interiores (fácil impresión y buen acabado)
+- **Espesor de Pared**: Mínimo 2.5mm para componentes estructurales
+- **Rejillas de Ventilación**: Diseño que permita disipación de calor de componentes electrónicos
+- **Montaje**: Integración de puntos de fijación para tornillos o sistemas de encaje
+
+> **Nota**: Reemplaza las URLs de ejemplo (`https://ejemplo.com/imagenes/...`) con los enlaces reales a las imágenes de tus componentes impresos en 3D.
 
 ---
 
@@ -768,6 +921,18 @@ ExposedDropdownMenuBox mostrando la lista de dispositivos Bluetooth emparejados 
 
 #### Figura 6 - Comandos en Acción
 AssistChips y log mostrando el uso de diferentes comandos y sus respuestas.
+
+#### Figura 7 - Módulo ESP-WROOM-32
+Imagen del módulo ESP-WROOM-32 mostrando sus características de conectividad dual (Wi-Fi + Bluetooth).
+
+#### Figura 8 - Carcasa Impresa en 3D para Arduino
+Carcasa personalizada impresa en 3D diseñada para proteger el módulo Arduino y los sensores del proyecto.
+
+#### Figura 9 - Soporte para Barrera Impreso en 3D
+Soporte estructural impreso en 3D para el montaje de la barrera y el servo motor.
+
+#### Figura 10 - Estructura Completa Impresa en 3D
+Vista general del sistema completo de estacionamiento mostrando todos los componentes fabricados mediante impresión 3D.
 
 ### Anexo B: Código Fuente
 - Archivos principales mencionados en el informe:

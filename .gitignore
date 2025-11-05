@@ -13,3 +13,12 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+# Archivos relacionados con estructura_completa_3d en intrucciones
+intrucciones/*estructura*3d*
+intrucciones/*estructura_completa*
+
+
+# Archivo de estructura del informe
+ESTRUCTURA_INFORME_PRUEBA2.md
+
