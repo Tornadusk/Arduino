@@ -14,6 +14,8 @@ import com.victorgangas.arduinotb.ui.auth.ForgotPasswordScreen
 import androidx.compose.ui.Modifier
 import com.victorgangas.arduinotb.BluetoothViewModel
 import com.victorgangas.arduinotb.ui.profile.ProfileScreen
+import androidx.compose.ui.platform.LocalContext
+import android.app.Application
 
 sealed class Screen(val route: String) {
     object Login : Screen("login")
@@ -32,6 +34,15 @@ fun NavGraph(
 ) {
     val authState by authViewModel.authState.collectAsState()
     val isLoggedIn by authViewModel.isLoggedIn.collectAsState(initial = false)
+    val context = LocalContext.current
+    
+    // Configurar Application en BluetoothViewModel
+    androidx.compose.runtime.LaunchedEffect(Unit) {
+        val app = context.applicationContext as? Application
+        app?.let {
+            bluetoothViewModel.setApplication(it)
+        }
+    }
     
     // Determinar la pantalla inicial basada en el estado de autenticación
     val startDestination = if (isLoggedIn) Screen.Main.route else Screen.Login.route

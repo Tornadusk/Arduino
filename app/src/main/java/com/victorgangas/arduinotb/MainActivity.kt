@@ -68,6 +68,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.first
 import java.io.InputStream
 import java.io.OutputStream
 import java.util.UUID
@@ -91,6 +92,10 @@ import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.Alignment
+import com.victorgangas.arduinotb.security.SecureSerialCommunication
+import com.victorgangas.arduinotb.data.preferences.UserPreferences
+import android.app.Application
+import androidx.compose.runtime.LaunchedEffect
 
 @OptIn(ExperimentalMaterial3Api::class)
 class MainActivity : ComponentActivity() {
@@ -161,14 +166,67 @@ class BluetoothViewModel : ViewModel() {
         private set
     var uiConfigAboveLog by mutableStateOf(true) // true = arriba del log, false = abajo del log
         private set
+    
+    // Seguridad
+    var isSecureMode by mutableStateOf(false) // Modo seguro DESACTIVADO por defecto (Arduino Uno tiene poca memoria)
+        private set
+    var connectionStable by mutableStateOf(false)
+        private set
 
     private var socket: BluetoothSocket? = null
     private var readJob: Job? = null
     private var output: OutputStream? = null
     private var speechRecognizer: SpeechRecognizer? = null
+    
+    // Módulo de seguridad
+    private val secureComm = SecureSerialCommunication(viewModelScope)
+    private var userPreferences: UserPreferences? = null
 
     init {
         refreshPaired()
+        setupSecureComm()
+    }
+    
+    private fun setupSecureComm() {
+        secureComm.onHeartbeatTimeout = {
+            viewModelScope.launch(Dispatchers.Main) {
+                appendLog("⚠️ Timeout de conexión detectado\n")
+                connectionStable = false
+            }
+        }
+        secureComm.onEncryptionError = { error ->
+            viewModelScope.launch(Dispatchers.Main) {
+                appendLog("🔒 Error de seguridad: $error\n")
+            }
+        }
+    }
+    
+    private fun setupAuthToken() {
+        viewModelScope.launch(Dispatchers.IO) {
+            userPreferences?.let { prefs ->
+                val userId = prefs.userId.first() ?: return@launch
+                val username = prefs.username.first() ?: return@launch
+                val email = prefs.userEmail.first() ?: ""
+                
+                // Generar hash de sesión para token
+                val sessionData = "$userId:$username:$email:${System.currentTimeMillis()}"
+                val sessionHash = java.security.MessageDigest.getInstance("SHA-256")
+                    .digest(sessionData.toByteArray())
+                    .joinToString("") { "%02x".format(it) }
+                
+                secureComm.setAuthToken(userId, sessionHash)
+            }
+        }
+    }
+    
+    fun setApplication(application: Application) {
+        userPreferences = UserPreferences(application)
+        setupAuthToken()
+    }
+    
+    fun toggleSecureMode() {
+        isSecureMode = !isSecureMode
+        appendLog("🔒 Modo seguro: ${if (isSecureMode) "ACTIVADO" else "DESACTIVADO"}\n")
     }
 
     @SuppressLint("MissingPermission")
@@ -196,7 +254,20 @@ class BluetoothViewModel : ViewModel() {
                 output = s.outputStream
                 startReader(s.inputStream)
                 isConnected = true
-                appendLog("Conectado.\n")
+                
+                // Iniciar heartbeat si modo seguro está activo
+                if (isSecureMode) {
+                    secureComm.startHeartbeat { heartbeatMsg ->
+                        try {
+                            output?.write(heartbeatMsg.toByteArray())
+                        } catch (e: Exception) {
+                            appendLog("Error enviando heartbeat: ${e.message}\n")
+                        }
+                    }
+                    appendLog("✅ Conectado con cifrado AES y verificación de integridad\n")
+                } else {
+                    appendLog("Conectado.\n")
+                }
             } catch (t: Throwable) {
                 appendLog("Error de conexión: ${t.message}\n")
                 closeInternal()
@@ -212,11 +283,26 @@ class BluetoothViewModel : ViewModel() {
     }
 
     fun sendLine(line: String) {
-        val bytes = (line + "\n").toByteArray()
         viewModelScope.launch(Dispatchers.IO) {
             try {
+                val messageToSend = if (isSecureMode) {
+                    // Cifrar mensaje con verificación de integridad
+                    val requiresAuth = secureComm.requiresAuthentication(line)
+                    val encrypted = secureComm.encryptAndEncode(line, requiresAuth)
+                    encrypted + "\n"
+                } else {
+                    // Modo sin cifrado (compatibilidad)
+                    line + "\n"
+                }
+                
+                val bytes = messageToSend.toByteArray(Charsets.UTF_8)
                 output?.write(bytes)
-                appendLog("> $line\n")
+                
+                if (isSecureMode) {
+                    appendLog("🔒 > $line [CIFRADO]\n")
+                } else {
+                    appendLog("> $line\n")
+                }
             } catch (t: Throwable) {
                 appendLog("Error al enviar: ${t.message}\n")
             }
@@ -227,12 +313,25 @@ class BluetoothViewModel : ViewModel() {
         readJob?.cancel()
         readJob = viewModelScope.launch(Dispatchers.IO) {
             val buffer = ByteArray(1024)
+            val messageBuffer = StringBuilder()
+            
             while (isActive) {
                 try {
                     val n = input.read(buffer)
                     if (n > 0) {
-                        val s = String(buffer, 0, n)
-                        appendLog(s)
+                        val received = String(buffer, 0, n, Charsets.UTF_8)
+                        messageBuffer.append(received)
+                        
+                        // Procesar líneas completas
+                        var lineEnd: Int
+                        while (messageBuffer.indexOf('\n').also { lineEnd = it } >= 0) {
+                            val line = messageBuffer.substring(0, lineEnd).trim()
+                            messageBuffer.delete(0, lineEnd + 1)
+                            
+                            if (line.isNotEmpty()) {
+                                processReceivedMessage(line)
+                            }
+                        }
                     } else if (n < 0) {
                         break
                     }
@@ -244,8 +343,42 @@ class BluetoothViewModel : ViewModel() {
             closeInternal()
         }
     }
+    
+    private suspend fun processReceivedMessage(line: String) {
+        val decodedMessage = if (isSecureMode) {
+            // Intentar descifrar
+            val decrypted = secureComm.decodeAndDecrypt(line)
+            if (decrypted != null) {
+                // Verificar si es heartbeat
+                if (decrypted == "HEARTBEAT" || decrypted.trim() == "HEARTBEAT") {
+                    secureComm.processReceivedHeartbeat()
+                    connectionStable = secureComm.isConnectionStable
+                    appendLog("💓 Heartbeat recibido\n")
+                    return
+                }
+                decrypted
+            } else {
+                // Fallback: mostrar mensaje sin descifrar si falla
+                appendLog("⚠️ Error al descifrar mensaje: $line\n")
+                return
+            }
+        } else {
+            // Modo sin cifrado
+            line
+        }
+        
+        // Mostrar mensaje recibido
+        if (isSecureMode) {
+            appendLog("🔒 < $decodedMessage [VERIFICADO]\n")
+        } else {
+            appendLog(decodedMessage + "\n")
+        }
+    }
 
     private suspend fun closeInternal() {
+        try {
+            secureComm.stopHeartbeat()
+        } catch (_: Throwable) { }
         try {
             readJob?.cancelAndJoin()
         } catch (_: Throwable) { }
@@ -255,6 +388,12 @@ class BluetoothViewModel : ViewModel() {
         output = null
         socket = null
         isConnected = false
+        connectionStable = false
+    }
+    
+    override fun onCleared() {
+        super.onCleared()
+        secureComm.cleanup()
     }
 
     private fun appendLog(s: String) {
@@ -468,11 +607,46 @@ fun AppScreen(
         // Card: controles de conexión y voz
         Text("Conexión", color = Color.Gray)
         Card(colors = CardDefaults.cardColors()) {
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(12.dp)) {
-                Button(onClick = { vm.connect() }, enabled = !vm.isConnected && selected != null) { Text("Conectar") }
-                OutlinedButton(onClick = { vm.disconnect() }, enabled = vm.isConnected) { Text("Desconectar") }
-                IconButton(onClick = { vm.toggleVoice(activity = context as ComponentActivity) }, enabled = vm.isConnected) {
-                    Icon(Icons.Filled.Mic, contentDescription = "Voz")
+            Column(modifier = Modifier.padding(12.dp)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+                    Button(onClick = { vm.connect() }, enabled = !vm.isConnected && selected != null) { Text("Conectar") }
+                    OutlinedButton(onClick = { vm.disconnect() }, enabled = vm.isConnected) { Text("Desconectar") }
+                    IconButton(onClick = { vm.toggleVoice(activity = context as ComponentActivity) }, enabled = vm.isConnected) {
+                        Icon(Icons.Filled.Mic, contentDescription = "Voz")
+                    }
+                }
+                Spacer(Modifier.height(8.dp))
+                // Indicador de seguridad
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        if (vm.isSecureMode) "🔒 Modo Seguro: ACTIVADO" else "🔓 Modo Seguro: DESACTIVADO",
+                        style = TextStyle(fontSize = 12.sp),
+                        color = if (vm.isSecureMode) Color(0xFF4CAF50) else Color(0xFFF44336)
+                    )
+                    Switch(
+                        checked = vm.isSecureMode,
+                        onCheckedChange = { vm.toggleSecureMode() },
+                        enabled = !vm.isConnected
+                    )
+                }
+                if (vm.isConnected && vm.connectionStable) {
+                    Text(
+                        "✅ Conexión estable",
+                        style = TextStyle(fontSize = 10.sp),
+                        color = Color(0xFF4CAF50),
+                        modifier = Modifier.padding(top = 4.dp)
+                    )
+                } else if (vm.isConnected && !vm.connectionStable && vm.isSecureMode) {
+                    Text(
+                        "⚠️ Verificando conexión...",
+                        style = TextStyle(fontSize = 10.sp),
+                        color = Color(0xFFFF9800),
+                        modifier = Modifier.padding(top = 4.dp)
+                    )
                 }
             }
         }
